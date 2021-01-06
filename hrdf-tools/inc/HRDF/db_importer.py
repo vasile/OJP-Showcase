@@ -4,6 +4,7 @@ import os
 from .log_helpers import log_message
 
 from .HRDF_Parser.parse_bitfeld import import_db_bitfeld
+from .HRDF_Parser.parse_fplan import import_db_fplan
 from .HRDF_Parser.parse_gleis import import_db_gleis
 
 class HRDF_DB_Importer:
@@ -17,6 +18,7 @@ class HRDF_DB_Importer:
         
         import_db_bitfeld(self.hrdf_path, self.db_path, self.db_schema_config)
         import_db_gleis(self.hrdf_path, self.db_path, self.db_schema_config)
+        import_db_fplan(self.hrdf_path, self.db_path, self.db_schema_config)
 
         log_message("DONE")
 

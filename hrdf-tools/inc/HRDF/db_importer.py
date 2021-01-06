@@ -8,6 +8,7 @@ from .HRDF_Parser.parse_bitfeld import import_db_bitfeld
 from .HRDF_Parser.parse_fplan_stop_times import import_db_stop_times
 from .HRDF_Parser.parse_fplan import import_db_fplan
 from .HRDF_Parser.parse_gleis import import_db_gleis
+from .HRDF_Parser.parse_meta_stops import import_meta_stops
 from .HRDF_Parser.parse_stops import import_db_stops
 
 class HRDF_DB_Importer:
@@ -25,6 +26,7 @@ class HRDF_DB_Importer:
         import_db_stop_times(self.hrdf_path, self.db_path, self.db_schema_config)
         import_db_betrieb(self.hrdf_path, self.db_path, self.db_schema_config)
         import_db_stops(self.hrdf_path, self.db_path, self.db_schema_config)
+        import_meta_stops(self.hrdf_path, self.db_path, self.db_schema_config)
 
         log_message("DONE")
 

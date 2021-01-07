@@ -7,19 +7,24 @@ import sys
 
 from ..db_helpers import load_sql_from_file, count_rows_table, table_select_rows
 from ..log_helpers import log_message
+from ...helpers.config_helpers import load_yaml_config
 
 class HRDF_Stops_Reporter:
     def __init__(self, db_path):
         self.db_path = db_path
         self.db_handle = sqlite3.connect(db_path)
 
-    def generate_json(self, json_path: str):
-        map_db_stops = table_select_rows(self.db_handle, table_name = "stops", group_by_key = "stop_id")
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        config_path = f"{dir_path}/config/config.yml"
+        self.config = load_yaml_config(config_path, app_path=dir_path)
 
-        map_stop_data = self._fetch_main_stop_data()
+    def generate_json(self, json_path: str):
+        map_service_type_mot_type = self._load_map_service_type_mot_type()
 
         # Save to a intermediary stop so we can resume from here without waiting for the DB query
         map_stop_data_path = json_path.replace('.json', '_step1.json')
+        
+        map_stop_data = self._fetch_main_stop_data()        
         stops_json_file = open(map_stop_data_path, 'w')
         stops_json_file.write(json.dumps(map_stop_data, indent=4))
         stops_json_file.close()
@@ -29,6 +34,7 @@ class HRDF_Stops_Reporter:
         # map_stop_data = json.loads(stops_json_file.read())
         # stops_json_file.close()
 
+        map_db_stops = table_select_rows(self.db_handle, table_name = "stops", group_by_key = "stop_id")
         self._attach_stops_relations(map_stop_data, map_db_stops)
 
         stops_report_json = self._compute_stops_report_json(map_stop_data, map_db_stops)
@@ -471,6 +477,21 @@ class HRDF_Stops_Reporter:
             }
             map_agency_transfer_trips[agency_group_key]["map_transfer_trips"][group_key]["transfer_trips"].append(transfer_trip_json)
         cursor.close()
+
+
+    def _load_map_service_type_mot_type(self):
+        map_service_type_mot_type = {}
+
+        csv_path = self.config['map_service_type_mot_type_path']
+        csv_handler = open(csv_path)
+        csv_reader = csv.DictReader(csv_handler)
+        for row in csv_reader:
+            mot_type = row['Verkehrsmittelkategorie']
+            service_type = row['Angebotskategorie']
+
+            map_service_type_mot_type[service_type] = mot_type
+        
+        return map_service_type_mot_type
 
     @staticmethod 
     def _load_sql_named(filename: str):

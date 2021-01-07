@@ -576,6 +576,8 @@ class HRDF_Stops_Reporter:
 
     @staticmethod 
     def _load_sql_named(filename: str):
+        filename = filename.replace('.sql', '')
+
         dir_path = os.path.dirname(os.path.realpath(__file__))
         db_path = os.path.abspath(dir_path + f"/sql/{filename}.sql")
         return load_sql_from_file(db_path)

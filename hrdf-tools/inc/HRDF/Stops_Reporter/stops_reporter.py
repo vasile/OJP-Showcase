@@ -251,6 +251,12 @@ class HRDF_Stops_Reporter:
             db_row_idx += 1
         select_cursor.close()
 
+        map_stop_trips_data = self._fetch_fplan_trips_data()
+
+        for stop_id in map_stop_data:
+            stop_trips_data = map_stop_trips_data[stop_id]
+            map_stop_data[stop_id]["stop_times_stats"] = stop_trips_data
+
         return map_stop_data
 
     def _compute_stops_report_json(self, map_stop_data: any, map_db_stops: any):
@@ -327,9 +333,9 @@ class HRDF_Stops_Reporter:
                 "agencies": stop_agency_rows,
             }
 
-            for relation_key in ["station_groups", "map_agency_transfer_lines", "map_agency_transfer_trips"]:
-                if relation_key in map_stop_data[stop_id]:
-                    stop_data[relation_key] = map_stop_data[stop_id][relation_key]
+            for relation_key in ["station_groups", "map_agency_transfer_lines", "map_agency_transfer_trips", "stop_times_stats"]:
+                if relation_key in stop_data:
+                    stop_export_data[relation_key] = stop_data[relation_key]
             
             stops_report_json.append(stop_export_data)
 
@@ -481,6 +487,45 @@ class HRDF_Stops_Reporter:
             map_agency_transfer_trips[agency_group_key]["map_transfer_trips"][group_key]["transfer_trips"].append(transfer_trip_json)
         cursor.close()
 
+
+    def _fetch_fplan_trips_data(self):
+        fplan_trip_bitfeld_cno = count_rows_table(self.db_handle, "fplan_trip_bitfeld")
+        log_message(f"QUERY FPLAN BITFELD AGGREGATE FPLAN_STOP_TIMES: {fplan_trip_bitfeld_cno} rows")
+
+        db_row_idx = 1
+
+        map_stop_trips_data = {}
+
+        sql = HRDF_Stops_Reporter._load_sql_named("select_fplan_stop_times_grouped_by_trips.sql")
+        select_cursor = self.db_handle.cursor()
+        select_cursor.execute(sql)
+        for db_row in select_cursor:
+            if db_row_idx % 50000 == 0:
+                log_message(f"... parsed {db_row_idx} rows ...")
+
+            stop_ids_s = db_row[5]
+            stop_ids = stop_ids_s.split(',')
+    
+            for idx, stop_id in enumerate(stop_ids):
+                is_first = idx == 0
+                is_last = idx == len(stop_ids) - 1
+                is_middle = not (is_first or is_last)
+
+                if stop_id not in map_stop_trips_data:
+                    map_stop_trips_data[stop_id] = {
+                        'first': 0,
+                        'middle': 0,
+                        'last': 0,
+                    }
+
+                if is_first:
+                    map_stop_trips_data[stop_id]['first'] += 1
+                if is_last:
+                    map_stop_trips_data[stop_id]['last'] += 1
+                if is_middle:
+                    map_stop_trips_data[stop_id]['middle'] += 1
+
+        return map_stop_trips_data
 
     def _load_map_service_type_mot_type(self):
         map_service_type_mot_type = {}

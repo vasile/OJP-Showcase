@@ -1,0 +1,1 @@
+These files are generated with the `stops_reporter_cli.py` tool

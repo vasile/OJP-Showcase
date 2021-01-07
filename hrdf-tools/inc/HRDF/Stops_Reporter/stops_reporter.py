@@ -37,7 +37,7 @@ class HRDF_Stops_Reporter:
         map_db_stops = table_select_rows(self.db_handle, table_name = "stops", group_by_key = "stop_id")
         self._attach_stops_relations(map_stop_data, map_db_stops)
 
-        stops_report_json = self._compute_stops_report_json(map_stop_data, map_db_stops)
+        stops_report_json = self._compute_stops_report_json(map_stop_data, map_db_stops, map_service_type_mot_type)
         
         stops_report_file = open(json_path, 'w')
         stops_report_file.write(json.dumps(stops_report_json, indent=4, ensure_ascii=False))
@@ -259,7 +259,7 @@ class HRDF_Stops_Reporter:
 
         return map_stop_data
 
-    def _compute_stops_report_json(self, map_stop_data: any, map_db_stops: any):
+    def _compute_stops_report_json(self, map_stop_data: any, map_db_stops: any, map_service_type_mot_type: any):
         # https://stackoverflow.com/a/5967539
         def atoi(text):
             return int(text) if text.isdigit() else text
@@ -274,6 +274,7 @@ class HRDF_Stops_Reporter:
         map_agency = table_select_rows(self.db_handle, table_name = "agency", group_by_key = "agency_id")      
 
         stops_report_json = []
+        map_missing_vehicle_types = {}
 
         for stop_id in map_stop_data:
             if stop_id not in map_db_stops:
@@ -282,6 +283,7 @@ class HRDF_Stops_Reporter:
             stop_data = map_stop_data[stop_id]
 
             stop_agency_rows = []
+            map_mot_types = {}
             
             map_agency_data = stop_data.get("agencies", False) or {}
             for agency_id in map_agency_data:
@@ -298,6 +300,15 @@ class HRDF_Stops_Reporter:
 
                 fplan_types_data = []
                 for vehicle_type in agency_data["map_vehicle_types"]:
+                    if vehicle_type not in map_service_type_mot_type:
+                        if vehicle_type not in map_missing_vehicle_types:
+                            map_missing_vehicle_types[vehicle_type] = 0
+                        map_missing_vehicle_types[vehicle_type] += 1
+                        mot_type = "Zug"
+                    else:
+                        mot_type = map_service_type_mot_type[vehicle_type]
+                    map_mot_types[mot_type] = 1
+                    
                     fplan_type_data = {
                         "vehicle_type": vehicle_type,
                         "fplan_cno": agency_data["map_vehicle_types"][vehicle_type]
@@ -326,10 +337,13 @@ class HRDF_Stops_Reporter:
                 }
                 stop_agency_rows.append(agency_row_data)
 
+            mot_types = list(map_mot_types.keys())
+
             db_stop = map_db_stops[stop_id]
             stop_export_data = {
                 "stop_id": stop_id,
                 "stop_name": db_stop["stop_name"],
+                "mot_types": mot_types,
                 "agencies": stop_agency_rows,
             }
 
@@ -339,6 +353,10 @@ class HRDF_Stops_Reporter:
             
             stops_report_json.append(stop_export_data)
 
+        has_missing_vehicle_types = len(map_missing_vehicle_types.keys()) > 0
+        if has_missing_vehicle_types:
+            print("WARNING - following service_types are not present in Mapping_Angebotskategorie_Verkehrsmittelkategorie.csv")
+            print(map_missing_vehicle_types)
 
         return stops_report_json
 

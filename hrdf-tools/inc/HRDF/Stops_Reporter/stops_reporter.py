@@ -48,7 +48,7 @@ class HRDF_Stops_Reporter:
         return stops_report_json 
 
     def generate_csv(self, stops_report_json: any, csv_path: str):
-        csv_field_names = ["Haltestelle", "Name", "Anzahl TU", "TU", "Anzahl Linien", "Linien", "Anzahl Angebotskategorien", "Angebotskategorien", "Anzahl Steige", "Steige", "Anzahl METABHF Beziehungen", "METABHF Beziehungen", "Anzahl UMSTEIGL Beziehungen", "UMSTEIGL Beziehungen", "Anzahl UMSTEIGZ Beziehungen", "UMSTEIGZ Beziehungen"]
+        csv_field_names = ["Haltestelle", "Name", "Anzahl TU", "TU", "Anzahl VM-Kategorien", "VM-Kategorien", "Anzahl Aufrüfe als Zwischenhalt", "Anzahl Aufrüfe als Starthalt", "Anzahl Aufrüfe als Endhalt", "Anzahl Linien", "Linien", "Anzahl Angebotskategorien", "Angebotskategorien", "Anzahl Steige", "Steige", "Anzahl METABHF Beziehungen", "METABHF Beziehungen", "Anzahl UMSTEIGL Beziehungen", "UMSTEIGL Beziehungen", "Anzahl UMSTEIGZ Beziehungen", "UMSTEIGZ Beziehungen"]
 
         csv_file = open(csv_path, "w", encoding="utf-8")
         csv_writer = csv.DictWriter(csv_file, fieldnames=csv_field_names)
@@ -172,11 +172,26 @@ class HRDF_Stops_Reporter:
                             umsteig_trips_relations_csv_line = f"    {from_fplan_trip_id} - {to_fplan_trip_id}"
                             umsteig_trips_relations_csv_lines.append(umsteig_trips_relations_csv_line)
 
+            mot_types_cno = len(stop_data['mot_types'])
+
+            stops_cno_first = 0
+            stops_cno_middle = 0
+            stops_cno_last = 0
+            if 'stop_times_stats' in stop_data:
+                stops_cno_first = stop_data['stop_times_stats']['first']
+                stops_cno_middle = stop_data['stop_times_stats']['middle']
+                stops_cno_last = stop_data['stop_times_stats']['last']
+
             csv_row_dict = {
                 "Haltestelle": stop_data["stop_id"],
                 "Name": stop_data["stop_name"],
                 "Anzahl TU": len(stop_data["agencies"]),
                 "TU": "\n".join(agency_value_lines),
+                "Anzahl VM-Kategorien": mot_types_cno,
+                "VM-Kategorien": "\n".join(stop_data['mot_types']),
+                "Anzahl Aufrüfe als Zwischenhalt": stops_cno_first, 
+                "Anzahl Aufrüfe als Starthalt": stops_cno_middle,
+                "Anzahl Aufrüfe als Endhalt": stops_cno_last,
                 "Anzahl Linien": stop_service_lines_cno,
                 "Linien": "\n".join(stop_service_lines),
                 "Anzahl Angebotskategorien": stop_fplan_types_cno,
@@ -219,7 +234,7 @@ class HRDF_Stops_Reporter:
 
             if stop_id not in map_stop_data:
                 map_stop_data[stop_id] = {
-                    "agencies": {}
+                    "agencies": {},
                 }
 
             map_stop_agencies = map_stop_data[stop_id]["agencies"]

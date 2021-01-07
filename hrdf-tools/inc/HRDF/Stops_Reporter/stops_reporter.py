@@ -273,9 +273,11 @@ class HRDF_Stops_Reporter:
             if stop_id not in map_db_stops:
                 continue # stop_id not in ./BFKOORD_WGS
 
+            stop_data = map_stop_data[stop_id]
+
             stop_agency_rows = []
             
-            map_agency_data = map_stop_data[stop_id].get("agencies", False) or {}
+            map_agency_data = stop_data.get("agencies", False) or {}
             for agency_id in map_agency_data:
                 agency_data = map_agency_data[agency_id]
 
@@ -319,7 +321,7 @@ class HRDF_Stops_Reporter:
                 stop_agency_rows.append(agency_row_data)
 
             db_stop = map_db_stops[stop_id]
-            stop_data = {
+            stop_export_data = {
                 "stop_id": stop_id,
                 "stop_name": db_stop["stop_name"],
                 "agencies": stop_agency_rows,
@@ -328,8 +330,9 @@ class HRDF_Stops_Reporter:
             for relation_key in ["station_groups", "map_agency_transfer_lines", "map_agency_transfer_trips"]:
                 if relation_key in map_stop_data[stop_id]:
                     stop_data[relation_key] = map_stop_data[stop_id][relation_key]
+            
+            stops_report_json.append(stop_export_data)
 
-            stops_report_json.append(stop_data)
 
         return stops_report_json
 

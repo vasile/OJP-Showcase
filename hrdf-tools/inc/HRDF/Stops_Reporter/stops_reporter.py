@@ -558,6 +558,8 @@ class HRDF_Stops_Reporter:
                 if is_middle:
                     map_stop_trips_data[stop_id]['middle'] += 1
 
+            db_row_idx += 1
+
         return map_stop_trips_data
 
     def _load_map_service_type_mot_type(self):

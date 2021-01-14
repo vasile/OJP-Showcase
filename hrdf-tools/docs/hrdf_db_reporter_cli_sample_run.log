@@ -1,0 +1,16 @@
+$ python3 hrdf_db_reporter_cli.py -p tmp/hrdf_2021-01-10.sqlite
+==========================================
+table                         :      count
+==========================================
+agency                        :        615
+calendar                      :     16,049
+fplan                         :    470,563
+fplan_stop_times              :  7,473,318
+fplan_trip_bitfeld            :    472,199
+gleis                         :      4,290
+gleis_classification          :    522,510
+stop_relations                :      8,334
+stop_transfer_lines           :        228
+stop_transfer_trips           :      1,471
+stops                         :     33,197
+==========================================

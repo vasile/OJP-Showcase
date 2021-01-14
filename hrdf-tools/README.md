@@ -16,14 +16,38 @@ Usage: `hrdf_importer_cli.py [-h] [-p PATH] [-o OUTPUT]`
 
 The script tries to guess the HRDF date from the path, in the case above will create and fill `hrdf-tools/tmp/hrdf_2020-12-20.sqlite` DB.
 
-See [hrdf-tools/docs/hrdf_importer_cli_sample_run.log](docs/hrdf_importer_cli_sample_run.log) for sample output
+See [hrdf-tools/docs/hrdf_importer_cli_sample_run.log](docs/hrdf_importer_cli_sample_run.log) for sample output.
 
-### Stops Reporter Tool
+### HRDF DB reporter
 
 Issue: https://github.com/openTdataCH/OJP-Showcase/issues/13
 
+Small tool that generates a report about tables and total number of rows in a given database.
+
+Usage: `hrdf_db_reporter_cli.py [-h] [-p PATH]`
+
+|Param|Long|Description|Example|
+|--|--|--|--|
+|-p|--path|input path to HRDF DB, relative or absolute|hrdf-tools/tmp/hrdf_2021-01-10.sqlite|
+
+See [hrdf-tools/docs/hrdf_db_reporter_cli_sample_run.log](docs/hrdf_db_reporter_cli_sample_run.log) for sample output/
+
+### Stops Reporter Tool
+
+Issue: https://github.com/openTdataCH/OJP-Showcase/issues/3
+
+Python tool that generates a CSV report for the HRDF stations, the fields are specified in the Github issue.
+The CSV file is converted (manual for now) to Excel format and uploaded to[hrdf-tools/export/stops_reporter](hrdf-toolsexport/stops_reporter)
+
+Usage: `stops_reporter_cli.py [-h] [-p PATH]`
+
+|Param|Long|Description|Example|
+|--|--|--|--|
+|-p|--path|input path to HRDF DB, relative or absolute|hrdf-tools/tmp/hrdf_2021-01-10.sqlite|
+
 `$ python3 stops_reporter_cli.py -p tmp/hrdf_2020-12-06.sqlite`
 
-WIP - TBA
+The script tries to guess the HRDF date from the path, in the case above will create and fill `hrdf-tools/tmp/hrdf_2020-12-20.sqlite` DB.
 
+See [hrdf-tools/docs/stops_reporter_cli_sample_run.log](docs/stops_reporter_cli_sample_run.log) for sample output.
 

@@ -46,8 +46,5 @@ Usage: `stops_reporter_cli.py [-h] [-p PATH]`
 |-p|--path|input path to HRDF DB, relative or absolute|hrdf-tools/tmp/hrdf_2021-01-10.sqlite|
 
 `$ python3 stops_reporter_cli.py -p tmp/hrdf_2020-12-06.sqlite`
-
-The script tries to guess the HRDF date from the path, in the case above will create and fill `hrdf-tools/tmp/hrdf_2020-12-20.sqlite` DB.
-
 See [hrdf-tools/docs/stops_reporter_cli_sample_run.log](docs/stops_reporter_cli_sample_run.log) for sample output.
 

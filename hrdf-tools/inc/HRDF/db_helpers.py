@@ -1,7 +1,7 @@
 import sqlite3
 import sys
 
-from .log_helpers import log_message
+from ..helpers.log_helpers import log_message
 
 def truncate_and_load_table_records(db_path, table_name, table_config, row_items, log_lines_no = 100000):
     db_handle = sqlite3.connect(db_path)

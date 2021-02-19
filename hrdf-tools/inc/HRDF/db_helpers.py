@@ -113,6 +113,7 @@ def table_select_rows(db_handle: any, table_name: str, where_clause = "", group_
     cursor.close()
 
     if group_by_key:
+        # TODO - what's the most Python-ique way to achive this?
         map_rows_by_key = {}
         for row_item in row_items:
             row_key = row_item[group_by_key]

@@ -19,7 +19,7 @@ class HRDF_Stops_Reporter:
         self.config = load_yaml_config(config_path, app_path=dir_path)
 
     def generate_json(self, json_path: str):
-        map_service_type_mot_type = self._load_map_service_type_mot_type()
+        map_service_type_main_vehicle_type = self._load_map_service_type_main_vehicle_type()
 
         # Save to a intermediary stop so we can resume from here without waiting for the DB query
         map_stop_data_path = json_path.replace('.json', '_step1.json')
@@ -37,7 +37,7 @@ class HRDF_Stops_Reporter:
         map_db_stops = table_select_rows(self.db_handle, table_name = "stops", group_by_key = "stop_id")
         self._attach_stops_relations(map_stop_data, map_db_stops)
 
-        stops_report_json = self._compute_stops_report_json(map_stop_data, map_db_stops, map_service_type_mot_type)
+        stops_report_json = self._compute_stops_report_json(map_stop_data, map_db_stops, map_service_type_main_vehicle_type)
         
         stops_report_file = open(json_path, 'w')
         stops_report_file.write(json.dumps(stops_report_json, indent=4, ensure_ascii=False))
@@ -172,7 +172,8 @@ class HRDF_Stops_Reporter:
                             umsteig_trips_relations_csv_line = f"    {from_fplan_trip_id} - {to_fplan_trip_id}"
                             umsteig_trips_relations_csv_lines.append(umsteig_trips_relations_csv_line)
 
-            mot_types_cno = len(stop_data['mot_types'])
+            main_vehicle_types = stop_data['main_vehicle_types']
+            main_vehicle_types_cno = len(main_vehicle_types)
 
             stops_cno_first = 0
             stops_cno_middle = 0
@@ -187,8 +188,8 @@ class HRDF_Stops_Reporter:
                 "Name": stop_data["stop_name"],
                 "Anzahl TU": len(stop_data["agencies"]),
                 "TU": "\n".join(agency_value_lines),
-                "Anzahl VM-Kategorien": mot_types_cno,
-                "VM-Kategorien": "\n".join(stop_data['mot_types']),
+                "Anzahl VM-Kategorien": main_vehicle_types_cno,
+                "VM-Kategorien": "\n".join(main_vehicle_types),
                 "Anzahl Aufrüfe als Zwischenhalt": stops_cno_first, 
                 "Anzahl Aufrüfe als Starthalt": stops_cno_middle,
                 "Anzahl Aufrüfe als Endhalt": stops_cno_last,
@@ -274,7 +275,7 @@ class HRDF_Stops_Reporter:
 
         return map_stop_data
 
-    def _compute_stops_report_json(self, map_stop_data: any, map_db_stops: any, map_service_type_mot_type: any):
+    def _compute_stops_report_json(self, map_stop_data: any, map_db_stops: any, map_service_type_main_vehicle_type: any):
         # https://stackoverflow.com/a/5967539
         def atoi(text):
             return int(text) if text.isdigit() else text
@@ -298,7 +299,7 @@ class HRDF_Stops_Reporter:
             stop_data = map_stop_data[stop_id]
 
             stop_agency_rows = []
-            map_mot_types = {}
+            map_main_vehicle_types = {}
             
             map_agency_data = stop_data.get("agencies", False) or {}
             for agency_id in map_agency_data:
@@ -315,14 +316,14 @@ class HRDF_Stops_Reporter:
 
                 fplan_types_data = []
                 for vehicle_type in agency_data["map_vehicle_types"]:
-                    if vehicle_type not in map_service_type_mot_type:
+                    if vehicle_type not in map_service_type_main_vehicle_type:
                         if vehicle_type not in map_missing_vehicle_types:
                             map_missing_vehicle_types[vehicle_type] = 0
                         map_missing_vehicle_types[vehicle_type] += 1
-                        mot_type = "Zug"
+                        main_vehicle_type = "Zug"
                     else:
-                        mot_type = map_service_type_mot_type[vehicle_type]
-                    map_mot_types[mot_type] = 1
+                        main_vehicle_type = map_service_type_main_vehicle_type[vehicle_type]
+                    map_main_vehicle_types[main_vehicle_type] = 1
                     
                     fplan_type_data = {
                         "vehicle_type": vehicle_type,
@@ -352,13 +353,13 @@ class HRDF_Stops_Reporter:
                 }
                 stop_agency_rows.append(agency_row_data)
 
-            mot_types = list(map_mot_types.keys())
+            main_vehicle_types = list(map_main_vehicle_types.keys())
 
             db_stop = map_db_stops[stop_id]
             stop_export_data = {
                 "stop_id": stop_id,
                 "stop_name": db_stop["stop_name"],
-                "mot_types": mot_types,
+                "main_vehicle_types": main_vehicle_types,
                 "agencies": stop_agency_rows,
             }
 
@@ -562,19 +563,19 @@ class HRDF_Stops_Reporter:
 
         return map_stop_trips_data
 
-    def _load_map_service_type_mot_type(self):
-        map_service_type_mot_type = {}
+    def _load_map_service_type_main_vehicle_type(self):
+        map_service_type_main_vehicle_type = {}
 
-        csv_path = self.config['map_service_type_mot_type_path']
+        csv_path = self.config['map_service_type_main_vehicle_type_path']
         csv_handler = open(csv_path)
         csv_reader = csv.DictReader(csv_handler)
         for row in csv_reader:
-            mot_type = row['Verkehrsmittelkategorie']
+            main_vehicle_type = row['Verkehrsmittelkategorie']
             service_type = row['Angebotskategorie']
 
-            map_service_type_mot_type[service_type] = mot_type
+            map_service_type_main_vehicle_type[service_type] = main_vehicle_type
         
-        return map_service_type_mot_type
+        return map_service_type_main_vehicle_type
 
     @staticmethod 
     def _load_sql_named(filename: str):

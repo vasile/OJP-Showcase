@@ -1,4 +1,4 @@
 {
     "python.autoComplete.extraPaths": ["./hrdf-tools"],
-    "python.languageServer": "Microsoft"
+    "python.languageServer": "Jedi"
 }

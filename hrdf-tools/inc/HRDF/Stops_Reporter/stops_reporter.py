@@ -211,6 +211,58 @@ class HRDF_Stops_Reporter:
 
         log_message(f"saved to {csv_path}")
 
+    def generate_geojson(self, stops_reporter_json_path: str, geojson_path: str):
+        log_message("START")
+
+        stops_reporter_json_file = open(stops_reporter_json_path)
+        stops_reporter_json = json.loads(stops_reporter_json_file.read())
+        stops_reporter_json_file.close()
+
+        map_db_stops = table_select_rows(self.db_handle, table_name = "stops", group_by_key = "stop_id")
+
+        stop_features = []
+
+        for stop_export_data in stops_reporter_json:
+            stop_id = stop_export_data['stop_id']
+            db_stop = map_db_stops[stop_id]
+
+            stop_coordinates = [db_stop['stop_lon'], db_stop['stop_lat']]
+
+            main_vehicle_types = stop_export_data['main_vehicle_types']
+
+            stop_name = db_stop['stop_name']
+
+            stop_feature = {
+                'type': 'Feature',
+                'id': stop_id,
+                'properties': {
+                    'stop_id': stop_id,
+                    'stop_name': stop_name,
+                    'stop_altitude': db_stop['stop_altitude'],
+                    'in_fplan': db_stop['in_fplan'],
+                    'main_vehicle_types_s': ",".join(main_vehicle_types),
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': stop_coordinates,
+                }
+            }
+
+            stop_features.append(stop_feature)
+
+        stops_geojson = {
+            'type': 'FeatureCollection',
+            'features': stop_features,
+        }
+
+        stops_geojson_file = open(geojson_path, 'w', encoding='utf8')
+        stops_geojson_file.write(json.dumps(stops_geojson, indent=4))
+        stops_geojson_file.close()
+
+        features_cno = len(stop_features)
+
+        log_message(f"... saved {features_cno} stop features GeoJSON to {geojson_path}")
+    
     def _fetch_main_stop_data(self):
         fplan_stop_times_cno = count_rows_table(self.db_handle, "fplan_stop_times")
         log_message(f"QUERY FPLAN, FPLAN_STOP_TIMES: {fplan_stop_times_cno} rows")

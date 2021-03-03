@@ -5,8 +5,8 @@ import re
 import sqlite3
 import sys
 
-from ..db_helpers import load_sql_from_file, count_rows_table, table_select_rows
-from ..log_helpers import log_message
+from ...helpers.db_helpers import load_sql_from_file, count_rows_table, table_select_rows
+from ...helpers.log_helpers import log_message
 from ...helpers.config_helpers import load_yaml_config
 
 class HRDF_Stops_Reporter:

@@ -1,7 +1,7 @@
 import sqlite3
 import sys
 
-from ..helpers.log_helpers import log_message
+from .log_helpers import log_message
 
 def truncate_and_load_table_records(db_path, table_name, table_config, row_items, log_lines_no = 100000):
     db_handle = sqlite3.connect(db_path)
@@ -166,3 +166,14 @@ def fetch_db_table_names(db_handle: any = None, db_path: any = None):
 
     return table_names
     
+def execute_sql_queries(db_handle: None, query_items: [str], log_lines_no = 100000):
+    query_items_groups = split_rows_in_groups(query_items, log_lines_no)
+    for query_items_group in query_items_groups:
+        queries_no = len(query_items_group)
+        log_message(f"EXECUTE {queries_no} / {len(query_items)} rows ...")
+
+        db_cursor = db_handle.cursor()
+        for query in query_items_group:
+            db_cursor.execute(query)
+        db_handle.commit()
+        db_cursor.close()

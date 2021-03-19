@@ -1,0 +1,12 @@
+.vertical-align {
+    display: flex;
+    align-items: center;
+}
+
+.gtfs-trips {
+    font-size: 14px;
+}
+
+.stop_times {
+    font-size: 12px;
+}
